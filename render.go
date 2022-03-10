@@ -38,7 +38,7 @@ func (s *Service) ShowManual(userID int64) error {
 	}
 	for _, link := range links {
 		if link != nil && link.ShortURL != nil {
-			linkText += fmt.Sprintf("\n - %s", fmt.Sprintf("https://linknetworkbot/sl/%s", *link.ShortURL))
+			linkText += fmt.Sprintf("\n - %s", fmt.Sprintf("https://linknetworkbot.com/sl/%s", *link.ShortURL))
 		}
 	}
 	if len(links) == 0 {
