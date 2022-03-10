@@ -61,15 +61,17 @@ func main() {
 	}
 
 	r := mux.NewRouter()
-	r.HandleFunc("/{shortURL}", s.shortURLHandler)
-	http.ListenAndServe("0.0.0.0:8080", r)
+	r.HandleFunc("/{shortURL}", s.shortURLHandler).Methods(http.MethodGet)
 
 	log.Printf("Authorized on account %s", bot.Self.UserName)
 
 	u := tgbotapi.NewUpdate(0)
 	u.Timeout = 60
 
-	s.handleBotUpdates(bot.GetUpdatesChan(u))
+	go s.handleBotUpdates(bot.GetUpdatesChan(u))
+
+	log.Println("starting server on port 8080...")
+	http.ListenAndServe("0.0.0.0:8080", r)
 }
 
 func (s *Service) handleBotUpdates(updates tgbotapi.UpdatesChannel) {
