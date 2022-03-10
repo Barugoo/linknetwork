@@ -61,7 +61,7 @@ func main() {
 	}
 
 	r := mux.NewRouter()
-	r.HandleFunc("/{shortURL}", s.shortURLHandler).Methods(http.MethodGet)
+	r.HandleFunc("/sl/{shortURL}", s.shortURLHandler).Methods(http.MethodGet)
 
 	log.Printf("Authorized on account %s", bot.Self.UserName)
 
