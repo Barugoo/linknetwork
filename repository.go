@@ -25,7 +25,7 @@ func NewRepository(db *sql.DB) Repository {
 
 func (rep repository) CreateLink(link *Link) error {
 	now := time.Now()
-	_, err := rep.db.Exec("INSERT INTO links (user_id, url, short_url, click_count, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?)",
+	_, err := rep.db.Exec("INSERT INTO links (user_id, url, short_url, click_count, created_at, updated_at) VALUES ($1, $2, $3, $4, $5, $6)",
 		link.UserID,
 		link.URL,
 		link.ShortURL,
@@ -36,7 +36,7 @@ func (rep repository) CreateLink(link *Link) error {
 }
 
 func (rep repository) GetLinkByUserID(userID int64) (*Link, error) {
-	row := rep.db.QueryRow("SELECT id, user_id, url, short_url, click_count, created_at, updated_at FROM links WHERE user_id = ?", userID)
+	row := rep.db.QueryRow("SELECT id, user_id, url, short_url, click_count, created_at, updated_at FROM links WHERE user_id = $1", userID)
 
 	var res Link
 	if err := row.Scan(
@@ -54,7 +54,7 @@ func (rep repository) GetLinkByUserID(userID int64) (*Link, error) {
 }
 
 func (rep repository) GetLinkByShortURL(shortURL string) (*Link, error) {
-	row := rep.db.QueryRow("SELECT id, user_id, url, short_url, click_count, created_at, updated_at FROM links WHERE short_url = ?", shortURL)
+	row := rep.db.QueryRow("SELECT id, user_id, url, short_url, click_count, created_at, updated_at FROM links WHERE short_url = $1", shortURL)
 
 	var res Link
 	if err := row.Scan(
@@ -72,23 +72,24 @@ func (rep repository) GetLinkByShortURL(shortURL string) (*Link, error) {
 }
 
 func (rep repository) UpdateLink(link *Link) error {
-	_, err := rep.db.Exec("UPDATE links SET user_id = ?, url = ?, short_url = ?, click_count = ?, updated_at = ? WHERE id = ?",
+	_, err := rep.db.Exec("UPDATE links SET user_id = $1, url = $2, short_url = $3, click_count = $4, updated_at = $5 WHERE id = $6",
 		link.UserID,
 		link.URL,
 		link.ShortURL,
 		link.ClickCount,
 		time.Now(),
+		link.ID,
 	)
 	return err
 }
 
 func (rep repository) DeleteLinkByUserID(userID int64) error {
-	_, err := rep.db.Exec("DELETE FROM links WHERE user_id = ?", userID)
+	_, err := rep.db.Exec("DELETE FROM links WHERE user_id = $1", userID)
 	return err
 }
 
 func (rep repository) ListAllLinks(limit int) ([]*Link, error) {
-	rows, err := rep.db.Query("SELECT id, user_id, url, short_url, click_count, created_at, updated_at FROM links WHERE url IS NOT NULL ORDER BY ASC LIMIT ?", limit)
+	rows, err := rep.db.Query("SELECT id, user_id, url, short_url, click_count, created_at, updated_at FROM links WHERE url IS NOT NULL ORDER BY ASC LIMIT $1", limit)
 	if err != nil {
 		return nil, err
 	}
@@ -112,7 +113,7 @@ func (rep repository) ListAllLinks(limit int) ([]*Link, error) {
 }
 
 func (rep repository) GetLinkCount() (int64, error) {
-	row := rep.db.QueryRow("SELECT count() as count FROM links WHERE link is not '0'")
+	row := rep.db.QueryRow("SELECT count() as count FROM links WHERE link IS NOT NULL")
 
 	var count int64
 	if err := row.Scan(&count); err != nil {
