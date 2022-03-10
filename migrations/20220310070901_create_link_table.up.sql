@@ -4,7 +4,6 @@ CREATE TABLE links (
     url TEXT,
     short_url TEXT,
     click_count INTEGER NOT NULL,
-    link TEXT,
     created_at TIMESTAMP NOT NULL, 
     updated_at TIMESTAMP NOT NULL
 );
