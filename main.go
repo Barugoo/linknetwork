@@ -67,8 +67,8 @@ func (s *Service) handleBotUpdates(updates tgbotapi.UpdatesChannel) {
 				continue
 			}
 			if update.CallbackQuery.Data == "deleteLink" {
-				if err := s.db.DeleteLinkByUserID(update.CallbackQuery.From.ID); err != nil {
-					log.Printf("unable to delete link: %v\n", err)
+				if err := s.ShowDeleteLink(update.CallbackQuery.From.ID); err != nil {
+					log.Printf("unable to add link: %v\n", err)
 				}
 				continue
 			}
