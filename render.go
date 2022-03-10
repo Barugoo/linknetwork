@@ -11,7 +11,9 @@ func (s *Service) ShowDeleteLink(userID int64) error {
 	if err := s.db.DeleteLinkByUserID(userID); err != nil {
 		return fmt.Errorf("unable to delete link: %w", err)
 	}
-	_, err := s.bot.Send(tgbotapi.NewMessage(userID, "Ваша ссылка удалена"))
+	msg := tgbotapi.NewMessage(userID, "Ваша ссылка удалена")
+	msg.ReplyMarkup = GetKeyboard(KeyboardModeAddLink)
+	_, err := s.bot.Send(msg)
 	return err
 }
 
