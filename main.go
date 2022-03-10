@@ -22,13 +22,14 @@ type Service struct {
 func main() {
 	token := flag.String("t", "", "tg api token")
 	linkLimit := flag.Int("l", 5, "link limit in manual")
+	dsn := flag.String("d", "postgres://postgres:@localhost:5432/postgres?sslmode=disabled", "database dsn")
 	flag.Parse()
 
 	bot, err := tgbotapi.NewBotAPI(*token)
 	if err != nil {
 		log.Fatalf("unable to initialize tg client: %v", err)
 	}
-	db, err := sql.Open("postgres", "store.db")
+	db, err := sql.Open("postgres", *dsn)
 	if err != nil {
 		log.Fatalf("unable to open db conn: %v", err)
 	}
