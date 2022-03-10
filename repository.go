@@ -113,7 +113,7 @@ func (rep repository) ListAllLinks(limit int) ([]*Link, error) {
 }
 
 func (rep repository) GetLinkCount() (int64, error) {
-	row := rep.db.QueryRow("SELECT count() as count FROM links WHERE link IS NOT NULL")
+	row := rep.db.QueryRow("SELECT count(*) as count FROM links WHERE link IS NOT NULL")
 
 	var count int64
 	if err := row.Scan(&count); err != nil {
