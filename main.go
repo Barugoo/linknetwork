@@ -65,6 +65,9 @@ func main() {
 
 	r := mux.NewRouter()
 	r.HandleFunc("/sl/{shortURL}", s.shortURLHandler).Methods(http.MethodGet)
+	r.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		http.Redirect(w, r, "https://t.me/LinkNetworkBot", http.StatusPermanentRedirect)
+	})
 
 	log.Printf("Authorized on account %s", bot.Self.UserName)
 
