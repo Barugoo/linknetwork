@@ -7,39 +7,34 @@ import (
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 )
 
-func DeleteLink(bot *tgbotapi.BotAPI, db *sql.DB, userID int64) error {
-	if err := DeleteLinkByUser(db, userID); err != nil {
+func (s *Service) ShowDeleteLink(userID int64) error {
+	if err := s.db.DeleteLinkByUserID(userID); err != nil {
 		return fmt.Errorf("unable to delete link: %w", err)
 	}
-	_, err := bot.Send(tgbotapi.NewMessage(userID, "Ваша ссылка удалена"))
+	_, err := s.bot.Send(tgbotapi.NewMessage(userID, "Ваша ссылка удалена"))
 	return err
 }
 
-func AddLink(bot *tgbotapi.BotAPI, db *sql.DB, userID int64) error {
+func (s *Service) ShowAddLink(userID int64) error {
 	msg := tgbotapi.NewMessage(userID, "Введите урл на ваш пост с поиском работы:")
-	if err := InsertLink(db, userID, "0"); err != nil {
+	link := &Link{
+		UserID:     userID,
+		ClickCount: 0,
+	}
+	if err := s.db.CreateLink(link); err != nil {
 		return fmt.Errorf("unable to insert link: %w", err)
 	}
-	_, err := bot.Send(msg)
+	_, err := s.bot.Send(msg)
 	return err
 }
 
-func ShowManual(bot *tgbotapi.BotAPI, db *sql.DB, userID int64) error {
+func (s *Service) ShowManual(userID int64) error {
 	var linkText string
-	var i int
-	links, err := ListAllLinks(db)
-	if err != nil {
+	links, err := s.db.ListAllLinks(s.linkLimit)
+	if err != nil && err != sql.ErrNoRows {
 		return fmt.Errorf("unable to list links: %w", err)
 	}
-	// order of iterating here is random because of implementation of 'map' in Go
 	for _, link := range links {
-		if i >= 5 {
-			break
-		}
-		if link == "0" {
-			continue
-		}
-		i++
 		linkText += fmt.Sprintf("\n - %s", link)
 	}
 	if len(links) == 0 {
@@ -51,10 +46,14 @@ func ShowManual(bot *tgbotapi.BotAPI, db *sql.DB, userID int64) error {
 	msg.ReplyMarkup = GetKeyboard(KeyboardModeAddLink)
 	msg.DisableWebPagePreview = true
 
-	if err := InsertLink(db, userID, "0"); err != nil {
+	link := &Link{
+		UserID:     userID,
+		ClickCount: 0,
+	}
+	if err := s.db.CreateLink(link); err != nil {
 		return fmt.Errorf("unable to insert links: %w", err)
 	}
-	_, err = bot.Send(msg)
+	_, err = s.bot.Send(msg)
 	return err
 }
 
@@ -90,3 +89,31 @@ func GetKeyboard(keyboardMode KeyboardMode) tgbotapi.InlineKeyboardMarkup {
 		),
 	)
 }
+
+var welcomeText = `
+Привет!👋
+Возникла идея организовать бота для взаимолайков в Linkedin с целью повышения количества просмотров профилей коллег, которые ищут работу с релокацией. 
+
+Эффект от лайков значителен, так как ваш пост вероятно окажется в ленте всех контактов лайкнувшего человека, среди которых обычно бывают рекрутеры. 
+Таким образом мы сможем помочь друг-другу поскорее найти работу.
+
+🙅‍♀️ Мы не сохраняем ничего, кроме ссылки и айдишника пользователя для идентификации. Исходники доступны по кнопке👇
+
+Тем временем уже %d коллег добавили ссылки😍`
+
+var manualText = `
+Если вы хотите в этом поучаствовать вам нужно сделать следующее:
+
+1. Опубликовать в linkedin пост о том, что вы ищите работу с релокацией (желательно на английском) и пометить свой профиль как открытый для поиска работы
+
+2. Мы просим вас пролайкать посты ваших коллег и добавить их в контакты, чтобы повысить охват. Лайкать/добавлять или нет остается на ваше усмотрение%s
+
+3. Затем нажать кнопочку "Добавить ссылку" и вам будет предложено ввести ссылку на пост из пункта 1. После этого он начнет появляться в блоке ссылок для других участников данного флешмоба
+
+После добавления ссылки, при желании вы ее сможете удалить из выдачи. Для этого снова введите /start - появится кнопка для удаления
+`
+
+var endText = `
+Так же было бы круто, если бы вы добавились в наш чат для общения - будем держаться вместе! (кнопка для перехода в чат внизу)
+Друзья, давайте поможем друг-другу найти работу в это нелегкое время! Всем мир.❤️
+`
