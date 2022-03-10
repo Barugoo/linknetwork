@@ -41,7 +41,7 @@ func (s *Service) shortURLHandler(w http.ResponseWriter, r *http.Request) {
 func main() {
 	token := flag.String("t", "", "tg api token")
 	linkLimit := flag.Int("l", 5, "link limit in manual")
-	dsn := flag.String("d", "postgres://postgres:1234@localhost:5432/postgres?sslmode=disable", "database dsn")
+	dsn := flag.String("d", "postgres://postgres:1234@localhost:5432/linknetwork?sslmode=disable", "database dsn")
 	flag.Parse()
 
 	bot, err := tgbotapi.NewBotAPI(*token)
