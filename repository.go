@@ -72,10 +72,20 @@ func (rep repository) GetLinkByShortURL(shortURL string) (*Link, error) {
 }
 
 func (rep repository) UpdateLink(link *Link) error {
+	var url sql.NullString
+	if link.URL != nil {
+		url.Valid = true
+		url.String = *link.URL
+	}
+	var shortURL sql.NullString
+	if link.ShortURL != nil {
+		shortURL.Valid = true
+		shortURL.String = *link.ShortURL
+	}
 	_, err := rep.db.Exec("UPDATE links SET user_id = $1, url = $2, short_url = $3, click_count = $4, updated_at = $5 WHERE id = $6",
 		link.UserID,
-		link.URL,
-		link.ShortURL,
+		url,
+		shortURL,
 		link.ClickCount,
 		time.Now(),
 		link.ID,
