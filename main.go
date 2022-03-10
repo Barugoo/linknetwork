@@ -70,8 +70,8 @@ func main() {
 
 	go s.handleBotUpdates(bot.GetUpdatesChan(u))
 
-	log.Println("starting server on port 443...")
-	http.ListenAndServe("0.0.0.0:443", r)
+	log.Println("starting server on port 8080...")
+	http.ListenAndServe("0.0.0.0:8080", r)
 }
 
 func (s *Service) handleBotUpdates(updates tgbotapi.UpdatesChannel) {
