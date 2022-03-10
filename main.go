@@ -62,7 +62,7 @@ func main() {
 
 	r := mux.NewRouter()
 	r.HandleFunc("/{shortURL}", s.shortURLHandler)
-	http.ListenAndServe("0.0.0.0", r)
+	http.ListenAndServe("0.0.0.0:8080", r)
 
 	log.Printf("Authorized on account %s", bot.Self.UserName)
 
