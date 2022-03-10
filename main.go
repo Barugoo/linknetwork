@@ -29,6 +29,10 @@ func (s *Service) shortURLHandler(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "https://google.com", http.StatusPermanentRedirect)
 		return
 	}
+	link.ClickCount++
+	if err := s.db.UpdateLink(link); err != nil {
+		log.Printf("unable to update link %d: %v\n", link.ID, err)
+	}
 	http.Redirect(w, r, *link.URL, http.StatusPermanentRedirect)
 }
 
@@ -115,6 +119,9 @@ func (s *Service) handleBotUpdates(updates tgbotapi.UpdatesChannel) {
 				}
 				url := update.Message.Text
 				link.URL = &url
+
+				var short string = "sFqsdvQ"
+				link.ShortURL = &short
 
 				if err := s.db.UpdateLink(link); err != nil {
 					log.Printf("unable to update link: %v", err)
