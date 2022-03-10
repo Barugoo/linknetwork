@@ -46,13 +46,6 @@ func (s *Service) ShowManual(userID int64) error {
 	msg.ReplyMarkup = GetKeyboard(KeyboardModeAddLink)
 	msg.DisableWebPagePreview = true
 
-	link := &Link{
-		UserID:     userID,
-		ClickCount: 0,
-	}
-	if err := s.db.CreateLink(link); err != nil {
-		return fmt.Errorf("unable to insert links: %w", err)
-	}
 	_, err = s.bot.Send(msg)
 	return err
 }
