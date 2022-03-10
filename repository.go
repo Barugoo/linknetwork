@@ -8,7 +8,7 @@ import (
 type Repository interface {
 	CreateLink(link *Link) error
 	GetLinkByUserID(userID int64) (*Link, error)
-	GetLinkByShortURL(shortUR string) (*Link, error)
+	GetLinkByShortURL(shortURL string) (*Link, error)
 	UpdateLink(link *Link) error
 	DeleteLinkByUserID(userID int64) error
 	GetLinkCount() (int64, error)
