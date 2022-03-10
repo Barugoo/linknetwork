@@ -5,9 +5,11 @@ import (
 	"flag"
 	"fmt"
 	"log"
+	"net/http"
 	"net/url"
 	"strings"
 
+	"github.com/gorilla/mux"
 	_ "github.com/lib/pq"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
@@ -17,6 +19,17 @@ type Service struct {
 	db        Repository
 	bot       *tgbotapi.BotAPI
 	linkLimit int
+}
+
+func (s *Service) shortURLHandler(w http.ResponseWriter, r *http.Request) {
+	shortURL := mux.Vars(r)["shortURL"]
+	link, err := s.db.GetLinkByShortURL(shortURL)
+	if err != nil {
+		log.Printf("unable to get link by short url %s: %v\n", shortURL, err)
+		http.Redirect(w, r, "https://google.com", http.StatusPermanentRedirect)
+		return
+	}
+	http.Redirect(w, r, *link.URL, http.StatusPermanentRedirect)
 }
 
 func main() {
@@ -42,6 +55,10 @@ func main() {
 		db:        NewRepository(db),
 		linkLimit: *linkLimit,
 	}
+
+	r := mux.NewRouter()
+	r.HandleFunc("/{shortURL}", s.shortURLHandler)
+	http.ListenAndServe("0.0.0.0", r)
 
 	log.Printf("Authorized on account %s", bot.Self.UserName)
 
