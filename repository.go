@@ -29,7 +29,7 @@ func (rep repository) CreateLink(link *Link) error {
 		link.UserID,
 		link.URL,
 		link.ShortURL,
-		0,
+		link.ClickCount,
 		now,
 		now)
 	return err
