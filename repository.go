@@ -89,7 +89,7 @@ func (rep repository) DeleteLinkByUserID(userID int64) error {
 }
 
 func (rep repository) ListAllLinks(limit int) ([]*Link, error) {
-	rows, err := rep.db.Query("SELECT id, user_id, url, short_url, click_count, created_at, updated_at FROM links WHERE url IS NOT NULL ORDER BY ASC LIMIT $1", limit)
+	rows, err := rep.db.Query("SELECT id, user_id, url, short_url, click_count, created_at, updated_at FROM links WHERE url IS NOT NULL ORDER BY click_count ASC LIMIT $1", limit)
 	if err != nil {
 		return nil, err
 	}
