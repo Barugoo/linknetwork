@@ -13,7 +13,7 @@ import (
 )
 
 var welcomeText = `
-Привет! 
+Привет!👋
 Возникла идея организовать бота для взаимолайков в Linkedin с целью повышения количества просмотров профилей коллег, которые ищут работу с релокацией. 
 
 Эффект от лайков значителен, так как ваш пост вероятно окажется в ленте всех контактов лайкнувшего человека, среди которых обычно бывают рекрутеры. 
@@ -24,7 +24,7 @@ var welcomeText = `
 Тем временем уже %d коллег добавили ссылки😍`
 
 var manualText = `
-Если вы хотите в этом поучавствовать вам нужно сделать следующее:
+Если вы хотите в этом поучаствовать вам нужно сделать следующее:
 
 1. Опубликовать в linkedin пост о том, что вы ищите работу с релокацией (желательно на английском) и пометить свой профиль как открытый для поиска работы
 
@@ -84,13 +84,13 @@ func main() {
 
 			link, err := GetLinkByUser(db, update.Message.Chat.ID)
 			if err != nil && err != sql.ErrNoRows {
-				log.Printf("unable to get link: %v", err)
+				log.Printf("unable to get link: %v\n", err)
 				continue
 			}
 			if link != nil && *link != "0" {
 				msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Вы уже добавили свою ссылку")
 				msg.DisableWebPagePreview = true
-				msg.ReplyMarkup = GetKeyboard(true)
+				msg.ReplyMarkup = GetKeyboard(KeyboardModeDeleteLink)
 				bot.Send(msg)
 				continue
 			}
@@ -108,7 +108,7 @@ func main() {
 				}
 				msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Ваша ссылка добавлена, спасибо!"+endText)
 
-				msg.ReplyMarkup = GetKeyboard(true)
+				msg.ReplyMarkup = GetKeyboard(KeyboardModeDeleteLink)
 				msg.DisableWebPagePreview = true
 
 				bot.Send(msg)
@@ -122,7 +122,7 @@ func main() {
 					continue
 				}
 				msg := tgbotapi.NewMessage(update.Message.Chat.ID, fmt.Sprintf(welcomeText, linkCount))
-				msg.ReplyMarkup = GetKeyboard(false)
+				msg.ReplyMarkup = GetKeyboard(KeyboardModeShowManual)
 				msg.DisableWebPagePreview = true
 
 				bot.Send(msg)
