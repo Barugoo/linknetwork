@@ -2,6 +2,7 @@ package main
 
 import (
 	"database/sql"
+	"flag"
 	"fmt"
 	"log"
 	"net/url"
@@ -41,7 +42,10 @@ var endText = `
 `
 
 func main() {
-	bot, err := tgbotapi.NewBotAPI("token")
+	token := flag.String("t", "", "tg api token")
+	flag.Parse()
+
+	bot, err := tgbotapi.NewBotAPI(*token)
 	if err != nil {
 		log.Fatalf("unable to initialize tg client: %v", err)
 	}
