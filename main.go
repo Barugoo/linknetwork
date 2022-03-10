@@ -128,7 +128,7 @@ func (s *Service) handleBotUpdates(updates tgbotapi.UpdatesChannel) {
 
 				var short string = generateRandomString(s.shortLinkLen)
 				_, err = s.db.GetLinkByShortURL(short)
-				for i := 0; err == sql.ErrNoRows && i < 10; i++ {
+				for i := 0; err != sql.ErrNoRows && i < 10; i++ {
 					short = generateRandomString(s.shortLinkLen)
 					_, err = s.db.GetLinkByShortURL(short)
 				}
