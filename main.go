@@ -163,8 +163,12 @@ func (s *Service) handleBotUpdates(updates tgbotapi.UpdatesChannel) {
 	}
 }
 
-func generateRandomString(len int) string {
-	res := make([]byte, len)
-	rand.Read(res)
-	return string(res)
+const letterBytes = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+
+func generateRandomString(n int) string {
+	b := make([]byte, n)
+	for i := range b {
+		b[i] = letterBytes[rand.Intn(len(letterBytes))]
+	}
+	return string(b)
 }
