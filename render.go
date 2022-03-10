@@ -37,8 +37,8 @@ func (s *Service) ShowManual(userID int64) error {
 		return fmt.Errorf("unable to list links: %w", err)
 	}
 	for _, link := range links {
-		if link != nil && link.URL != nil {
-			linkText += fmt.Sprintf("\n - %s", *link.URL)
+		if link != nil && link.ShortURL != nil {
+			linkText += fmt.Sprintf("\n - %s", *link.ShortURL)
 		}
 	}
 	if len(links) == 0 {

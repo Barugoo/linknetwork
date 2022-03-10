@@ -5,6 +5,7 @@ import (
 	"flag"
 	"fmt"
 	"log"
+	"math/rand"
 	"net/http"
 	"net/url"
 	"strings"
@@ -16,9 +17,10 @@ import (
 )
 
 type Service struct {
-	db        Repository
-	bot       *tgbotapi.BotAPI
-	linkLimit int
+	db           Repository
+	bot          *tgbotapi.BotAPI
+	linkLimit    int
+	shortLinkLen int
 }
 
 func (s *Service) shortURLHandler(w http.ResponseWriter, r *http.Request) {
@@ -55,9 +57,10 @@ func main() {
 	}
 
 	s := &Service{
-		bot:       bot,
-		db:        NewRepository(db),
-		linkLimit: *linkLimit,
+		bot:          bot,
+		db:           NewRepository(db),
+		linkLimit:    *linkLimit,
+		shortLinkLen: 8,
 	}
 
 	r := mux.NewRouter()
@@ -123,7 +126,12 @@ func (s *Service) handleBotUpdates(updates tgbotapi.UpdatesChannel) {
 				url := update.Message.Text
 				link.URL = &url
 
-				var short string = "sFqsdvQ"
+				var short string = generateRandomString(s.shortLinkLen)
+				_, err = s.db.GetLinkByShortURL(short)
+				for i := 0; err == sql.ErrNoRows && i < 10; i++ {
+					short = generateRandomString(s.shortLinkLen)
+					_, err = s.db.GetLinkByShortURL(short)
+				}
 				link.ShortURL = &short
 
 				if err := s.db.UpdateLink(link); err != nil {
@@ -153,4 +161,10 @@ func (s *Service) handleBotUpdates(updates tgbotapi.UpdatesChannel) {
 			}
 		}
 	}
+}
+
+func generateRandomString(len int) string {
+	res := make([]byte, len)
+	rand.Read(res)
+	return string(res)
 }
