@@ -35,7 +35,9 @@ func (s *Service) ShowManual(userID int64) error {
 		return fmt.Errorf("unable to list links: %w", err)
 	}
 	for _, link := range links {
-		linkText += fmt.Sprintf("\n - %s", link)
+		if link != nil && link.URL != nil {
+			linkText += fmt.Sprintf("\n - %s", *link.URL)
+		}
 	}
 	if len(links) == 0 {
 		linkText = "Пока ссылок нет!"
