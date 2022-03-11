@@ -1,73 +1,133 @@
 package main
 
-import "database/sql"
+import (
+	"database/sql"
+	"time"
+)
 
-func InsertLink(db *sql.DB, userID int64, link string) error {
-	_, err := db.Exec("INSERT INTO links (userID, link) VALUES (?, ?)", userID, link)
+type Repository interface {
+	CreateLink(link *Link) error
+	GetLinkByUserID(userID int64) (*Link, error)
+	GetLinkByShortURL(shortURL string) (*Link, error)
+	UpdateLink(link *Link) error
+	DeleteLinkByUserID(userID int64) error
+	GetLinkCount() (int64, error)
+	ListAllLinks(limit int) ([]*Link, error) // userID -> link
+}
+
+type repository struct {
+	db *sql.DB
+}
+
+func NewRepository(db *sql.DB) Repository {
+	return &repository{db}
+}
+
+func (rep repository) CreateLink(link *Link) error {
+	now := time.Now()
+	_, err := rep.db.Exec("INSERT INTO links (user_id, url, short_url, click_count, created_at, updated_at) VALUES ($1, $2, $3, $4, $5, $6)",
+		link.UserID,
+		link.URL,
+		link.ShortURL,
+		link.ClickCount,
+		now,
+		now)
 	return err
 }
 
-func GetLinkByUser(db *sql.DB, userID int64) (*string, error) {
-	row := db.QueryRow("SELECT link FROM links WHERE userID = ?", userID)
+func (rep repository) GetLinkByUserID(userID int64) (*Link, error) {
+	row := rep.db.QueryRow("SELECT id, user_id, url, short_url, click_count, created_at, updated_at FROM links WHERE user_id = $1", userID)
 
-	var res string
-	if err := row.Scan(&res); err != nil {
+	var res Link
+	if err := row.Scan(
+		&res.ID,
+		&res.UserID,
+		&res.URL,
+		&res.ShortURL,
+		&res.ClickCount,
+		&res.CreatedAt,
+		&res.UpdatedAt,
+	); err != nil {
 		return nil, err
 	}
 	return &res, nil
 }
 
-func UpdateLinkByUser(db *sql.DB, userID int64, newLink string) error {
-	_, err := db.Exec("UPDATE links SET link = ? WHERE userID = ?", newLink, userID)
-	return err
-}
+func (rep repository) GetLinkByShortURL(shortURL string) (*Link, error) {
+	row := rep.db.QueryRow("SELECT id, user_id, url, short_url, click_count, created_at, updated_at FROM links WHERE short_url = $1", shortURL)
 
-func DeleteLinkByUser(db *sql.DB, userID int64) error {
-	_, err := db.Exec("DELETE FROM links WHERE userID = ?", userID)
-	return err
-}
-
-func GetLinkCount(db *sql.DB) (int64, error) {
-	row := db.QueryRow("SELECT COUNT() FROM links")
-
-	var res int64
-	if err := row.Scan(&res); err != nil {
-		return 0, err
+	var res Link
+	if err := row.Scan(
+		&res.ID,
+		&res.UserID,
+		&res.URL,
+		&res.ShortURL,
+		&res.ClickCount,
+		&res.CreatedAt,
+		&res.UpdatedAt,
+	); err != nil {
+		return nil, err
 	}
-	return res, nil
+	return &res, nil
 }
 
-func ListAllLinks(db *sql.DB) (map[string]string, error) {
-	rows, err := db.Query("SELECT userID, link FROM links")
+func (rep repository) UpdateLink(link *Link) error {
+	var url sql.NullString
+	if link.URL != nil {
+		url.Valid = true
+		url.String = *link.URL
+	}
+	var shortURL sql.NullString
+	if link.ShortURL != nil {
+		shortURL.Valid = true
+		shortURL.String = *link.ShortURL
+	}
+	_, err := rep.db.Exec("UPDATE links SET user_id = $1, url = $2, short_url = $3, click_count = $4, updated_at = $5 WHERE id = $6",
+		link.UserID,
+		url,
+		shortURL,
+		link.ClickCount,
+		time.Now(),
+		link.ID,
+	)
+	return err
+}
+
+func (rep repository) DeleteLinkByUserID(userID int64) error {
+	_, err := rep.db.Exec("DELETE FROM links WHERE user_id = $1", userID)
+	return err
+}
+
+func (rep repository) ListAllLinks(limit int) ([]*Link, error) {
+	rows, err := rep.db.Query("SELECT id, user_id, url, short_url, click_count, created_at, updated_at FROM links WHERE url IS NOT NULL ORDER BY click_count ASC LIMIT $1", limit)
 	if err != nil {
 		return nil, err
 	}
 
-	m := make(map[string]string)
+	m := make([]*Link, 0)
 
-	var userID, link string
 	for rows.Next() {
-		rows.Scan(&userID, &link)
-		m[userID] = link
+		var res Link
+		rows.Scan(
+			&res.ID,
+			&res.UserID,
+			&res.URL,
+			&res.ShortURL,
+			&res.ClickCount,
+			&res.CreatedAt,
+			&res.UpdatedAt,
+		)
+		m = append(m, &res)
 	}
-
 	return m, nil
 }
 
-func LinkCount(db *sql.DB) (int64, error) {
-	row := db.QueryRow("SELECT count() as count FROM links WHERE link is not '0'")
+func (rep repository) GetLinkCount() (int64, error) {
+	row := rep.db.QueryRow("SELECT count(*) as count FROM links WHERE url IS NOT NULL")
 
 	var count int64
 	if err := row.Scan(&count); err != nil {
 		return 0, err
 	}
 	return count, nil
-}
-
-func InitDB(db *sql.DB) {
-	db.Exec(`CREATE TABLE links(
-		id INTEGER PRIMARY KEY AUTOINCREMENT, 
-		userID TEXT,
-		link TEXT
-	  );`)
 }
