@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
+	"time"
 
 	"github.com/gorilla/mux"
 	_ "github.com/lib/pq"
@@ -36,6 +37,10 @@ func (s *Service) shortURLHandler(w http.ResponseWriter, r *http.Request) {
 		log.Printf("unable to update link %d: %v\n", link.ID, err)
 	}
 	http.Redirect(w, r, *link.URL, http.StatusPermanentRedirect)
+}
+
+func init() {
+	rand.Seed(time.Now().Unix())
 }
 
 func main() {
